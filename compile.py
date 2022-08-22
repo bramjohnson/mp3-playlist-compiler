@@ -87,7 +87,7 @@ def main():
     if (args.normalize):
         ffmpeg.normalize_audio(AUDIO_BITRATE, playlist_length)
 
-    if (args.fit):
+    if (args.fit and thumbnail != None):
         thumbnail = utils.stretch_image(thumbnail)
 
     # Generate the mp4
