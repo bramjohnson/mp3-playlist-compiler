@@ -7,7 +7,7 @@ class Tracklist:
     def __init__(self, songs) -> None:
         time_in_sec = 0
         songs_starts = {}
-        tracklist = {}
+        tracklist = {}     
 
         for song in songs:
             songs_starts[song] = time_in_sec
@@ -51,7 +51,7 @@ class Tracklist:
             tracklist_txt.write(self.tracklist[song] + " - " + title + " [" + album + "]\n")
         
         # Collect tracklist file
-        fc.append("./tracklist.txt")
+        fc["tracklist"] = "./tracklist.txt"
 
         # Captions
         captions_txt = open("./captions.txt", "w", encoding="utf-8")
@@ -90,7 +90,7 @@ class Tracklist:
         captions_txt.write(title + " [" + album + "]\n")
 
         # Collect captions file
-        fc.append("./captions.txt")
+        fc["captions"] = "./captions.txt"
 
 def cleanup():
     if (os.path.exists('./big_audio.mp3')):

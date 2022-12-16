@@ -26,8 +26,8 @@ parser.add_argument("-o", "--output", help="An output folder where any videos/fi
 args = parser.parse_args()
 
 # Initialize file collections
-output_fc = []
-util_fc = [] # if collecting util files like big_audio is ever useful.
+output_fc = {}
+util_fc = {} # if collecting util files like big_audio is ever useful.
 
 def main():
     utils.cleanup()
@@ -76,35 +76,41 @@ def main():
     for song in songs:
         ffmpeg.remove_silence(song, args.silence[0], args.silence[1])
 
+    # Stretch thumbnail if args require
+    if (args.fit and thumbnail != None):
+        thumbnail = utils.stretch_image(thumbnail)
+
     # Calculate the tracklist
     tracklist = Tracklist(songs)
     playlist_length = tracklist.time_in_sec
 
-    # Combine all songs into one audio source
-    ffmpeg.concat(songs, playlist_length)
+    render_songs = songs.copy()
+    # Generate mp4s if thumbnail exists
+    if thumbnail != None and os.path.isfile(thumbnail):
+        render_songs = ffmpeg.convert_mp3s(songs, thumbnail, AUDIO_BITRATE, VIDEO_BITRATE, playlist_length)
+
+    # Use divide and conquer to merge songs
+    output_fc['out'] = ffmpeg.concat_merge(render_songs, playlist_length)
 
     # Normalize files if they should be
     if (args.normalize):
-        ffmpeg.normalize_audio(AUDIO_BITRATE, playlist_length)
-
-    if (args.fit and thumbnail != None):
-        thumbnail = utils.stretch_image(thumbnail)
-
-    # Generate the mp4
-    if (args.thumbnail != None):
-        ffmpeg.generate_mp4(thumbnail, TITLE, AUDIO_BITRATE, VIDEO_BITRATE, playlist_length, output_fc)
-    # Generate the mp3
-    else:
-        os.rename('big_audio.mp3', f'{TITLE}.mp3')
-        output_fc.append(f'./{TITLE}.mp3')
+        output_fc['out'] = ffmpeg.normalize_audio(output_fc['out'], "./tracklist/normalized" + os.path.splitext(output_fc['out'])[1], playlist_length)
 
     # Generate tracklist/captions if they should be
     if (args.data):
         tracklist.export_tracklist(songs, output_fc)
 
     # Move files to correct output folder
-    for file in output_fc:
-        shutil.move(file, os.path.join(args.output, file))
+    for key in output_fc:
+        src = output_fc[key]
+        dst = output_fc[key]
+
+        # Rename file to title
+        if key == "out":
+            dst = TITLE + os.path.splitext(src)[1]
+        
+        # Move to DST
+        shutil.move(src, os.path.join(args.output, dst))
 
     utils.cleanup()
 

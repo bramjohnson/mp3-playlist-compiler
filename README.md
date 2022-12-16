@@ -30,3 +30,7 @@ All python requirements are included in "requirements.txt"
 
 The following programs are also required:
 - FFmpeg
+
+# Troubleshooting
+p.stdout reading will fail if the file contains a tag that has special unicode characters in it.
+These can be edited by going into mp3tag and clicking "Edit extended tags" for all the songs in the folder.
